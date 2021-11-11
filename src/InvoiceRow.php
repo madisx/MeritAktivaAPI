@@ -32,7 +32,7 @@ class InvoiceRow extends \Infira\MeritAktiva\General
 
 	public function getQuantity()
 	{
-		$this->get("Quantity", 0);
+		return $this->get("Quantity", 0);
 	}
 	
 	/**
