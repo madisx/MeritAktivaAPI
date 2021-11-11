@@ -66,7 +66,7 @@ abstract class InvoiceGeneral extends \Infira\MeritAktiva\General
 		}
 		$this->taxAmounts[$taxID] += $Row->getPriceTaxAmount();
 		
-		$totalSum = $this->get("TotalAmount", 0) + $Row->getPriceNET();
+		$totalSum = $this->get("TotalAmount", 0) + ($Row->getPriceNET() * $Row->getQuantity());
 		$this->setTotalAmount($totalSum);
 	}
 	

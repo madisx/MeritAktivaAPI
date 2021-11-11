@@ -29,6 +29,11 @@ class InvoiceRow extends \Infira\MeritAktiva\General
 	{
 		$this->set("Quantity", $quantity);
 	}
+
+	public function getQuantity()
+	{
+		$this->get("Quantity", 0);
+	}
 	
 	/**
 	 * Get current row price without vat
