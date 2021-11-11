@@ -44,6 +44,11 @@ class InvoiceRow extends \Infira\MeritAktiva\General
 	{
 		return $this->get("Price", 0);
 	}
+
+	public function getTotalNET()
+	{
+		return $this->getPriceNET() * $this->getQuantity();
+	}
 	
 	/**
 	 * Get current row price without vat
@@ -62,7 +67,7 @@ class InvoiceRow extends \Infira\MeritAktiva\General
 	 */
 	public function getPriceTaxAmount()
 	{
-		return round($this->getTAX($this->getPriceNET(), FALSE), 2);
+		return round($this->getTAX($this->getTotalNET(), FALSE), 2);
 	}
 	
 	/**
