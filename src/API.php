@@ -11,38 +11,35 @@ if (!function_exists('debug'))
 		
 		if (count($args) == 1)
 		{
-			$html .= dump($args[0]);
+			$html .= mertiApiDump($args[0]);
 		}
 		else
 		{
-			$html .= dump($args);
+			$html .= mertiApiDump($args);
 		}
 		$html = "<pre>$html</pre>";
 		echo($html);
 	}
 }
-if (!function_exists('dump'))
+
+function mertiApiDump($variable, $echo = FALSE)
 {
-	function dump($variable, $echo = FALSE)
-	{
-		
-		if (is_array($variable) or is_object($variable))
-		{
-			$html = print_r($variable, TRUE);
-		}
-		else
-		{
-			ob_start();
-			var_dump($variable);
-			$html = ob_get_clean();
-		}
-		if ($echo == TRUE)
-		{
-			exit($html);
-		}
-		
-		return $html;
-	}
+    if (is_array($variable) or is_object($variable))
+    {
+        $html = print_r($variable, TRUE);
+    }
+    else
+    {
+        ob_start();
+        var_dump($variable);
+        $html = ob_get_clean();
+    }
+    if ($echo == TRUE)
+    {
+        exit($html);
+    }
+
+    return $html;
 }
 
 
@@ -145,7 +142,7 @@ class API extends \Infira\MeritAktiva\General
 		if ($status != 200)
 		{
 			$error = "Error: call to URL $url <br>STATUS: $status<br>CURL_ERROR: " . curl_error($curl) . "<br> CURL_ERRNO: " . curl_errno($curl);
-			$error .= '<br><br>API SAYS:' . dump($this->jsonDecode($curlResponse, TRUE));
+			$error .= '<br><br>API SAYS:' . mertiApiDump($this->jsonDecode($curlResponse, TRUE));
 			
 			return $error;
 		}
