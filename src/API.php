@@ -376,7 +376,31 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return $this->getCustomersBy(["Name" => $name]);
 	}
-	
+
+    /**
+     * Returns created customer data
+     *
+     * @param Customer $Customer
+     * @return \Infira\MeritAktiva\APIResult
+     * @see https://api.merit.ee/connecting-robots/reference-manual/customers/create-customer/
+     */
+    public function createCustomer(Customer $Customer): APIResult
+    {
+        return new APIResult($this->send("sendcustomer", $Customer->getData()));
+    }
+
+    /**
+     * Returns created customer data
+     *
+     * @param Customer $Customer
+     * @return \Infira\MeritAktiva\APIResult
+     * @see https://api.merit.ee/connecting-robots/reference-manual/customers/update-customer/
+     */
+    public function updateCustomer(Customer $Customer): APIResult
+    {
+        return new APIResult($this->send("updatecustomer", $Customer->getData()));
+    }
+
 	/**
 	 * @see https://api.merit.ee/reference-manual/tax-list/
 	 * @return \Infira\MeritAktiva\APIResult
@@ -385,7 +409,16 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return new APIResult($this->send("v1/gettaxes"));
 	}
-	
+
+	/**
+	 * @see https://api.merit.ee/connecting-robots/reference-manual/banks-list/
+	 * @return \Infira\MeritAktiva\APIResult
+	 */
+	public function getBanks()
+	{
+		return new APIResult($this->send("getbanks"));
+	}
+
 	/**
 	 * Get tax details
 	 *
