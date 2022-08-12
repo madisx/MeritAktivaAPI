@@ -289,7 +289,7 @@ class API extends \Infira\MeritAktiva\General
 	}
 	
 	/**
-	 * Save purcahse invoice
+	 * Save invoice payment
 	 *
 	 * @param \Infira\MeritAktiva\Payment $Invoice
 	 * @return \Infira\MeritAktiva\APIResult
@@ -298,7 +298,18 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return new APIResult($this->send("v1/sendpayment", $Invoice->getData()));
 	}
-	
+
+    /**
+     * Delete payment
+     *
+     * @param string $paymentId
+     * @return \Infira\MeritAktiva\APIResult
+     */
+    public function deletePayment(string $paymentId)
+    {
+        return new APIResult($this->send("deletepayment", ['Id' => $paymentId]));
+    }
+
 	/**
 	 * @see https://api.merit.ee/reference-manual/payments/list-of-payments/
 	 * @return \Infira\MeritAktiva\APIResult
