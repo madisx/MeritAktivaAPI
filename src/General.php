@@ -147,7 +147,7 @@ abstract class General
 	 */
 	public function intError($errorMessage)
 	{
-		throw new \Error($errorMessage);
+		throw new \Exception($errorMessage);
 	}
 	
 	private function getVatNr()
