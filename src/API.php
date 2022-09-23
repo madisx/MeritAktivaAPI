@@ -8,7 +8,7 @@ if (!function_exists('debug'))
 		$GLOBALS["debugIsActive"] = TRUE;
 		$args                     = func_get_args();
 		$html                     = "";
-		
+
 		if (count($args) == 1)
 		{
 			$html .= mertiApiDump($args[0]);
@@ -54,7 +54,7 @@ class API extends \Infira\MeritAktiva\General
 	private $lastRequestUrl  = "";
 	private $url             = "";
 	private $debug           = FALSE;
-	
+
 	public function __construct($apiID, $apiKey, $country = 'ee', $vatPercent = 20)
 	{
 		$this->apiID  = $apiID;
@@ -80,23 +80,23 @@ class API extends \Infira\MeritAktiva\General
             define("MERIT_VAT_PERCENT", $vatPercent);
         }
 	}
-	
+
 	public function setDebug(bool $bool)
 	{
 		$this->debug = $bool;
 	}
-	
-	
+
+
 	public function getLastRequestData()
 	{
 		return $this->lastRequestData;
 	}
-	
+
 	public function getLastRequestURL()
 	{
 		return $this->lastRequestUrl;
 	}
-	
+
 	private function send($endPoint, $payload = NULL)
 	{
 		$timestamp = date("YmdHis");
@@ -110,7 +110,7 @@ class API extends \Infira\MeritAktiva\General
 			}
 			$json = self::toUTF8(json_encode($payload));
 		}
-		
+
 		$dataString            = $this->apiID . $timestamp . $json;
 		$hash                  = hash_hmac("sha256", $dataString, $this->apiKey);
 		$signature             = base64_encode($hash);
@@ -124,8 +124,8 @@ class API extends \Infira\MeritAktiva\General
 
 		if (isset($json)) {
 			$headers[] = "Content-Length: " . strlen($json);
-		}		
-		
+		}
+
 		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
@@ -139,24 +139,24 @@ class API extends \Infira\MeritAktiva\General
 		{
 			debug('$curlResponse', $curlResponse);
 		}
-		
+
 		$status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-		
+
 		if ($status != 200)
 		{
 			$error = "Error: call to URL $url <br>STATUS: $status<br>CURL_ERROR: " . curl_error($curl) . "<br> CURL_ERRNO: " . curl_errno($curl);
 			$error .= '<br><br>API SAYS:' . mertiApiDump($this->jsonDecode($curlResponse, TRUE));
-			
+
 			return $error;
 		}
 		if (isset($curl))
 		{
 			curl_close($curl);
 		}
-		
+
 		return $this->jsonDecode($curlResponse);
 	}
-	
+
 	private function jsonDecode($json, $checkError = FALSE)
 	{
 		$json = stripslashes($json);
@@ -172,10 +172,10 @@ class API extends \Infira\MeritAktiva\General
 		{
 			return $json;
 		}
-		
+
 		return $data;
 	}
-	
+
 	private static function toUTF8($string)
 	{
 		$string = trim($string);
@@ -185,12 +185,12 @@ class API extends \Infira\MeritAktiva\General
 		{
 			return $string;
 		}
-		
+
 		return mb_convert_encoding($string, 'UTF-8', mb_detect_encoding($string, $encoding_list));
 	}
-	
+
 	//############ START OF endpoints
-	
+
 	/**
 	 * @param string $periodStart - string what is convertoed to time using strtotime()
 	 * @param string $periodEnd   - string what is convertoed to time using strtotime()
@@ -200,10 +200,10 @@ class API extends \Infira\MeritAktiva\General
 	public function getSalesInvoices($periodStart, $periodEnd): APIResult
 	{
 		$payload = ["PeriodStart" => date("Ymd", strtotime($periodStart)), "PeriodEnd" => date("Ymd", strtotime($periodEnd))];
-		
+
 		return new APIResult($this->send("getinvoices", $payload));
 	}
-	
+
 	/**
 	 * Get sales invoice details
 	 *
@@ -215,7 +215,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return new APIResult($this->send("getinvoice", ['id' => $GUID]));
 	}
-	
+
 	/**
 	 * Delete sales invoice
 	 *
@@ -227,7 +227,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return new APIResult($this->send("deleteinvoice", ['id' => $GUID]));
 	}
-	
+
 	/**
 	 * Returns created invoice data
 	 *
@@ -239,7 +239,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return new APIResult($this->send("sendinvoice", $Invoice->getData()));
 	}
-	
+
 	/**
 	 * Returns created invoice data
 	 *
@@ -251,7 +251,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return new APIResult($this->send("sendinvoice", $Invoice->getData()));
 	}
-	
+
 	/**
 	 * @param string $periodStart - string what is convertoed to time using strtotime()
 	 * @param string $periodEnd   - string what is convertoed to time using strtotime()
@@ -261,10 +261,10 @@ class API extends \Infira\MeritAktiva\General
 	public function getPurchaseInvoices($periodStart, $periodEnd): APIResult
 	{
 		$payload = ["PeriodStart" => date("Ymd", strtotime($periodStart)), "PeriodEnd" => date("Ymd", strtotime($periodEnd))];
-		
+
 		return new APIResult($this->send("getpurchorders", $payload));
 	}
-	
+
 	/**
 	 * Get sales invoice details
 	 *
@@ -276,7 +276,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return new APIResult($this->send("getpurchorder", ['id' => $GUID]));
 	}
-	
+
 	/**
 	 * Save purcahse invoice
 	 *
@@ -288,7 +288,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return new APIResult($this->send("sendpurchinvoice", $Invoice->getData()));
 	}
-	
+
 	/**
 	 * Save invoice payment
 	 *
@@ -318,10 +318,10 @@ class API extends \Infira\MeritAktiva\General
 	public function getPayments($periodStart, $periodEnd): APIResult
 	{
 		$payload = ["PeriodStart" => date("Ymd", strtotime($periodStart)), "PeriodEnd" => date("Ymd", strtotime($periodEnd))];
-		
+
 		return new APIResult($this->send("getpayments", $payload));
 	}
-	
+
 	/**
 	 * get Merit customers
 	 *
@@ -333,7 +333,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return new APIResult($this->send("getcustomers", $payload));
 	}
-	
+
 	/**
 	 * Get customer list
 	 *
@@ -344,7 +344,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return $this->getCustomersBy([]);
 	}
-	
+
 	/**
 	 * get merit vendor by ID
 	 *
@@ -355,7 +355,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return $this->getCustomersBy(["Id" => $this->validateGUID($GUID)]);
 	}
-	
+
 	/**
 	 * get merit vendor by RegNo
 	 *
@@ -366,7 +366,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return $this->getCustomersBy(["RegNo" => $no]);
 	}
-	
+
 	/**
 	 * get merit vendor by VatRegNo
 	 *
@@ -377,7 +377,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return $this->getCustomersBy(["VatRegNo" => $no]);
 	}
-	
+
 	/**
 	 * get merit vendor by Name
 	 *
@@ -431,6 +431,15 @@ class API extends \Infira\MeritAktiva\General
 		return new APIResult($this->send("getbanks"));
 	}
 
+    /**
+     * @see https://api.merit.ee/connecting-robots/reference-manual/accounts-list/
+     * @return \Infira\MeritAktiva\APIResult
+     */
+    public function getAccounts()
+    {
+        return new APIResult($this->send("getaccounts"));
+    }
+
 	/**
 	 * Get tax details
 	 *
@@ -452,17 +461,17 @@ class API extends \Infira\MeritAktiva\General
 				return $Row;
 			}
 		}
-		
+
 		return NULL;
 	}
-	
-	
+
+
 	/**
 	 * get merit vendors
 	 *
 	 * @return \Infira\MeritAktiva\APIResult
 	 */
-	
+
 	/**
 	 * @param array $payload
 	 * @see https://api.merit.ee/reference-manual/get-vendor-list/
@@ -472,7 +481,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return new APIResult($this->send("getvendors", $payload));
 	}
-	
+
 	/**
 	 * get vendors by ID
 	 *
@@ -482,7 +491,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return $this->getVendorsBy([]);
 	}
-	
+
 	/**
 	 * get vendors by ID
 	 *
@@ -492,7 +501,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return $this->getVendorsBy(["Id" => $ID]);
 	}
-	
+
 	/**
 	 * get merit vendor by RegNo
 	 *
@@ -502,7 +511,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return $this->getVendorsBy(["RegNo" => $no]);
 	}
-	
+
 	/**
 	 * get merit vendor by VatRegNo
 	 *
@@ -512,7 +521,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		return $this->getVendorsBy(["VatRegNo" => $no]);
 	}
-	
+
 	/**
 	 * get merit vendor by Name
 	 *
