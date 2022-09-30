@@ -6,17 +6,26 @@ abstract class General
 	protected $vars            = [];
 	private   $mandatoryFields = [];
 	protected $taxPercent      = 20;
-	
+
 	public function __get($name)
 	{
 		return $this->get($name);
 	}
-	
-	protected function toFloat(string $nr): float
+
+	protected function toFloat($nr): float
 	{
+        if (is_float($nr) || is_int($nr)) {
+            return (float)$nr;
+        }
+
 		return floatval(self::toNumber("$nr"));
 	}
-	
+
+    protected function toFloatString($nr): string
+    {
+        return "" . $nr;
+    }
+
 	private static function toNumber($val)
 	{
 		$val = trim($val);
@@ -29,7 +38,7 @@ abstract class General
 			return intval($val);
 		}
 	}
-	
+
 	protected function validateGUID($GUID)
 	{
 		if (preg_match("/^(\{)?[a-f\d]{8}(-[a-f\d]{4}){4}[a-f\d]{8}(?(1)\})$/i", $GUID))
@@ -38,13 +47,13 @@ abstract class General
 		}
 		$this->intError("Unvalid GUID");
 	}
-	
+
 	protected function convertDate($date)
 	{
 		return date("YmdHis", strtotime($date));
 	}
-	
-	
+
+
 	/**
 	 * Get variable
 	 *
@@ -62,19 +71,19 @@ abstract class General
 		if ($this->exists($name))
 		{
 			$r = $this->vars[$name];
-			
+
 			return $r;
 		}
-		
+
 		return $onNotFoundReurn;
 	}
-	
+
 	protected function setMandatoryField($name)
 	{
 		$this->mandatoryFields[$name] = TRUE;
 	}
-	
-	
+
+
 	/**
 	 * Alias to offsetSet
 	 *
@@ -86,8 +95,8 @@ abstract class General
 	{
 		$this->vars[$name] = $newVal;
 	}
-	
-	
+
+
 	/**
 	 * Does item exist
 	 *
@@ -98,7 +107,7 @@ abstract class General
 	{
 		return array_key_exists($name, $this->vars);
 	}
-	
+
 	/**
 	 * Get all vars
 	 *
@@ -132,14 +141,18 @@ abstract class General
 				{
 					$vars[$f] = $v->getData();
 				}
+				elseif (is_float($v))
+				{
+					$vars[$f] = $this->toFloatString($v);
+				}
 			}
-			
+
 			return $vars;
 		};
-		
+
 		return $parserVars($this->vars);
 	}
-	
+
 	/**
 	 * Send internal errors
 	 *
@@ -149,13 +162,13 @@ abstract class General
 	{
 		throw new \Exception($errorMessage);
 	}
-	
+
 	private function getVatNr()
 	{
 		return ($this->taxPercent / 100) + 1;
 	}
-	
-	
+
+
 	/*
 	 * Calc price VAT ammount @param float $price @param bool $priceContainsVat - is the price contains already vat
 	 */
@@ -170,11 +183,11 @@ abstract class General
 		{
 			$output = ($price * $this->getVatNr()) - $price;
 		}
-		
+
 		return $output;
 	}
-	
-	
+
+
 	/**
 	 * @param $priceNet
 	 * @return float|int
@@ -183,7 +196,7 @@ abstract class General
 	{
 		return $priceNet + $this->getTAX($priceNet, FALSE);
 	}
-	
+
 	/**
 	 * Remove vat from price
 	 */
