@@ -16,7 +16,12 @@ class SalesInvoice extends \Infira\MeritAktiva\InvoiceGeneral
 	{
 		$this->set('Customer', $Customer->getData());
 	}
-	
+
+    public function setPayer(\Infira\MeritAktiva\Customer $Customer)
+    {
+        $this->set('Payer', $Customer->getData());
+    }
+
 	public function setInvoiceNo($no)
 	{
 		$this->set('InvoiceNo', $no);
