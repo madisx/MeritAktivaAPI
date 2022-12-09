@@ -96,7 +96,7 @@ class API extends \Infira\MeritAktiva\General
 		return $this->lastRequestUrl;
 	}
 
-	private function send($endPoint, $payload = NULL)
+    private function send($endPoint, $payload = null, string $apiVersion = 'v1')
 	{
 		$timestamp = date("YmdHis");
 		$urlParams = "";
@@ -113,7 +113,14 @@ class API extends \Infira\MeritAktiva\General
 		$dataString            = $this->apiID . $timestamp . $json;
 		$hash                  = hash_hmac("sha256", $dataString, $this->apiKey);
 		$signature             = base64_encode($hash);
-		$url                   = sprintf('%s%s?ApiId=%s&timestamp=%s&signature=%s' . $urlParams, $this->url, $endPoint, $this->apiID, $timestamp, $signature);
+        $url                   = sprintf(
+                                    '%s%s?ApiId=%s&timestamp=%s&signature=%s' . $urlParams,
+                                    str_replace('v1/', $apiVersion . '/', $this->url),
+                                    $endPoint,
+                                    $this->apiID,
+                                    $timestamp,
+                                    $signature
+                                );
 		$this->lastRequestUrl  = $url;
 		$this->lastRequestData = $payload;
 
@@ -437,6 +444,15 @@ class API extends \Infira\MeritAktiva\General
     public function getAccounts()
     {
         return new APIResult($this->send("getaccounts"));
+    }
+
+    /**
+     * @see https://api.merit.ee/connecting-robots/reference-manual/dimensions/dimensionslist/
+     * @return \Infira\MeritAktiva\APIResult
+     */
+    public function getDimensions()
+    {
+        return new APIResult($this->send("getdimensions",null,'v2'));
     }
 
 	/**
