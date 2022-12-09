@@ -57,7 +57,12 @@ class Customer extends \Infira\MeritAktiva\General
 	{
 		$this->set("Country", $country);
 	}
-	
+
+	public function setContact($contact)
+	{
+		$this->set("Contact", $contact);
+	}
+
 	public function setPostalCode($code)
 	{
 		$this->set("PostalCode", $code);
