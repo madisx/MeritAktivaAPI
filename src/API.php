@@ -235,17 +235,18 @@ class API extends \Infira\MeritAktiva\General
 		return new APIResult($this->send("deleteinvoice", ['id' => $GUID]));
 	}
 
-	/**
-	 * Returns created invoice data
-	 *
-	 * @param SalesInvoice $Invoice
-	 * @see https://api.merit.ee/reference-manual/sales-invoices/create-sales-invoice/
-	 * @return \Infira\MeritAktiva\APIResult
-	 */
-	public function createSalesInvoice(SalesInvoice $Invoice): APIResult
-	{
-		return new APIResult($this->send("sendinvoice", $Invoice->getData()));
-	}
+    /**
+     * Returns created invoice data
+     *
+     * @param SalesInvoice $Invoice
+     * @param string $apiVersion
+     * @return \Infira\MeritAktiva\APIResult
+     * @see https://api.merit.ee/reference-manual/sales-invoices/create-sales-invoice/
+     */
+    public function createSalesInvoice(SalesInvoice $Invoice, string $apiVersion = 'v1'): APIResult
+    {
+        return new APIResult($this->send("sendinvoice", $Invoice->getData(), $apiVersion));
+    }
 
 	/**
 	 * Returns created invoice data

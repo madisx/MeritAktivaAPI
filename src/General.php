@@ -131,7 +131,8 @@ abstract class General
 		}
 		$parserVars = function ($vars) use (&$parserVars)
 		{
-			foreach ($vars as $f => $v)
+            /** @var array|static $v */
+            foreach ($vars as $f => $v)
 			{
 				if (is_array($v))
 				{
