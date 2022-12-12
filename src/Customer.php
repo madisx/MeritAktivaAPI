@@ -92,5 +92,13 @@ class Customer extends \Infira\MeritAktiva\General
 	{
 		$this->set("Email", $email);
 	}
-	
+
+    /**
+     * @param Dimension[] $dimensions
+     * @return void
+     */
+    public function setDimensions(array $dimensions)
+    {
+        $this->set("Dimensions", $dimensions);
+    }
 }

@@ -163,11 +163,6 @@ abstract class InvoiceGeneral extends \Infira\MeritAktiva\General
      */
     public function setDimensions(array $dimensions)
     {
-        $this->set(
-            "Dimensions",
-            array_map(function (Dimension $dim) {
-                return $dim->getData();
-            }, $dimensions)
-        );
+        $this->set("Dimensions", $dimensions);
     }
 }
