@@ -1,6 +1,9 @@
 <?php
 
 namespace Infira\MeritAktiva;
+
+use Error;
+
 if (!function_exists('debug'))
 {
 	function debug()
@@ -468,6 +471,12 @@ class API extends \Infira\MeritAktiva\General
 		return $this->getVendorsBy(["Name" => $name]);
 	}
 
+	/**
+	 * 
+	 * @param string $guid 
+	 * @return APIResult 
+	 * @see https://api.merit.ee/connecting-robots/reference-manual/sales-invoices/create-sales-invoice/send-sales-invoice-by-einvoice/
+	 */
 	public function sendEInvoice(string $guid)
 	{
 		return new APIResult($this->send("v2/sendinvoiceaseinv", ["Id" => $this->validateGUID($guid)]));
