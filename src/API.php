@@ -224,6 +224,7 @@ class API extends \Infira\MeritAktiva\General
      */
 	public function getSalesInvoiceByID(string $GUID, string $apiVersion = self::API_V1): APIResult
 	{
+
 		return new APIResult($this->send("$apiVersion/getinvoice", ['id' => $GUID]));
 	}
 
@@ -489,7 +490,7 @@ class API extends \Infira\MeritAktiva\General
 
 		return NULL;
 	}
-	
+
 	/**
 	 * @param array $payload
 	 * @see https://api.merit.ee/reference-manual/get-vendor-list/
