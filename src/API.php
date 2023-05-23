@@ -75,7 +75,7 @@ class API extends \Infira\MeritAktiva\General
 		}
 		else
 		{
-			throw new \Error("Unknown country");
+			throw new Error("Unknown country");
 		}
 		define("MERIT_VAT_PERCENT", $vatPercent);
 	}
