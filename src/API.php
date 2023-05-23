@@ -1,6 +1,9 @@
 <?php
 
 namespace Infira\MeritAktiva;
+
+use Error;
+
 if (!function_exists('debug'))
 {
 	function debug()
@@ -42,10 +45,6 @@ function mertiApiDump($variable, $echo = FALSE)
     return $html;
 }
 
-
-use Infira\MeritAktiva\APIResult AS APIResult;
-use Infira\MeritAktiva\SalesInvoice AS Invoice;
-
 class API extends \Infira\MeritAktiva\General
 {
     public const API_V1 = 'v1';
@@ -64,19 +63,19 @@ class API extends \Infira\MeritAktiva\General
 		$this->apiKey = $apiKey;
 		if ($country == 'ee')
 		{
-			$this->url = 'https://aktiva.merit.ee/api/v1/';
+			$this->url = 'https://aktiva.merit.ee/api/';
 		}
 		elseif ($country == 'fi')
 		{
-			$this->url = 'https://aktiva.meritaktiva.fi/api/v1/';
+			$this->url = 'https://aktiva.meritaktiva.fi/api/';
 		}
 		elseif ($country == 'pl')
 		{
-			$this->url = 'https://program.360ksiegowosc.pl/api/v1/';
+			$this->url = 'https://program.360ksiegowosc.pl/api/';
 		}
 		else
 		{
-			throw new \Error("Unknown country");
+			throw new Error("Unknown country");
 		}
 
         if (!defined('MERIT_VAT_PERCENT')) {
@@ -100,7 +99,7 @@ class API extends \Infira\MeritAktiva\General
 		return $this->lastRequestUrl;
 	}
 
-    private function send($endPoint, $payload = null, string $apiVersion = self::API_V1)
+    private function send($endPoint, $payload = null)
 	{
 		$timestamp = date("YmdHis");
 		$urlParams = "";
@@ -119,7 +118,7 @@ class API extends \Infira\MeritAktiva\General
 		$signature             = base64_encode($hash);
         $url                   = sprintf(
                                     '%s%s?ApiId=%s&timestamp=%s&signature=%s' . $urlParams,
-                                    str_replace('v1/', $apiVersion . '/', $this->url),
+                                    $this->url,
                                     $endPoint,
                                     $this->apiID,
                                     $timestamp,
@@ -212,7 +211,7 @@ class API extends \Infira\MeritAktiva\General
 	{
 		$payload = ["PeriodStart" => date("Ymd", strtotime($periodStart)), "PeriodEnd" => date("Ymd", strtotime($periodEnd))];
 
-		return new APIResult($this->send("getinvoices", $payload, $apiVersion));
+		return new APIResult($this->send("$apiVersion/getinvoices", $payload));
 	}
 
     /**
@@ -225,7 +224,8 @@ class API extends \Infira\MeritAktiva\General
      */
 	public function getSalesInvoiceByID(string $GUID, string $apiVersion = self::API_V1): APIResult
 	{
-		return new APIResult($this->send("getinvoice", ['id' => $GUID], $apiVersion));
+
+		return new APIResult($this->send("$apiVersion/getinvoice", ['id' => $GUID]));
 	}
 
     /**
@@ -237,7 +237,7 @@ class API extends \Infira\MeritAktiva\General
      */
 	public function deleteSalesInvoiceByID(string $GUID): APIResult
 	{
-		return new APIResult($this->send("deleteinvoice", ['id' => $GUID]));
+		return new APIResult($this->send("v1/deleteinvoice", ['id' => $GUID]));
 	}
 
     /**
@@ -250,19 +250,19 @@ class API extends \Infira\MeritAktiva\General
      */
     public function createSalesInvoice(SalesInvoice $Invoice, string $apiVersion = self::API_V1): APIResult
     {
-        return new APIResult($this->send("sendinvoice", $Invoice->getData(), $apiVersion));
+        return new APIResult($this->send("$apiVersion/sendinvoice", $Invoice->getData()));
     }
-
-    /**
-     * Returns created invoice data
-     *
-     * @param SalesInvoice $Invoice
-     * @return \Infira\MeritAktiva\APIResult
-     * @see https://api.merit.ee/reference-manual/sales-invoices/create-sales-invoice/
-     */
-	public function createCreditSalesInvoice(SalesInvoice $Invoice): APIResult
+	
+	/**
+	 * Returns created invoice data
+	 *
+	 * @param SalesInvoice $Invoice
+	 * @see https://api.merit.ee/reference-manual/sales-invoices/create-sales-invoice/
+	 * @return \Infira\MeritAktiva\APIResult
+	 */
+	public function createCreditSalesInvoice(SalesInvoice $Invoice, string $apiVersion = self::API_V1): APIResult
 	{
-		return new APIResult($this->send("sendinvoice", $Invoice->getData()));
+		return new APIResult($this->send("$apiVersion/sendinvoice", $Invoice->getData()));
 	}
 
     /**
@@ -271,11 +271,11 @@ class API extends \Infira\MeritAktiva\General
      * @return \Infira\MeritAktiva\APIResult
      * @see https://api.merit.ee/reference-manual/purchase-invoices/get-list-of-purchase-invoices/
      */
-	public function getPurchaseInvoices($periodStart, $periodEnd): APIResult
+	public function getPurchaseInvoices($periodStart, $periodEnd, string $apiVersion = self::API_V1): APIResult
 	{
 		$payload = ["PeriodStart" => date("Ymd", strtotime($periodStart)), "PeriodEnd" => date("Ymd", strtotime($periodEnd))];
-
-		return new APIResult($this->send("getpurchorders", $payload));
+		
+		return new APIResult($this->send("$apiVersion/getpurchorders", $payload));
 	}
 
     /**
@@ -288,7 +288,7 @@ class API extends \Infira\MeritAktiva\General
      */
 	public function getPurchaseInvoiceByID(string $GUID, string $apiVersion = self::API_V1): APIResult
 	{
-		return new APIResult($this->send("getpurchorder", ['id' => $GUID], $apiVersion));
+		return new APIResult($this->send("$apiVersion/getpurchorder", ['id' => $GUID]));
 	}
 
     /**
@@ -301,7 +301,7 @@ class API extends \Infira\MeritAktiva\General
      */
 	public function createPurchaseInvoice(\Infira\MeritAktiva\PurchaseInvoice $Invoice, string $apiVersion = self::API_V1)
 	{
-		return new APIResult($this->send("sendpurchinvoice", $Invoice->getData(), $apiVersion));
+		return new APIResult($this->send("$apiVersion/sendpurchinvoice", $Invoice->getData()));
 	}
 
 	/**
@@ -310,9 +310,9 @@ class API extends \Infira\MeritAktiva\General
 	 * @param \Infira\MeritAktiva\Payment $Invoice
 	 * @return \Infira\MeritAktiva\APIResult
 	 */
-	public function savePayment(\Infira\MeritAktiva\Payment $Invoice)
+	public function savePayment(\Infira\MeritAktiva\Payment $Invoice, string $apiVersion = self::API_V1)
 	{
-		return new APIResult($this->send("sendpayment", $Invoice->getData()));
+		return new APIResult($this->send("$apiVersion/sendpayment", $Invoice->getData()));
 	}
 
     /**
@@ -323,7 +323,7 @@ class API extends \Infira\MeritAktiva\General
      */
     public function deletePayment(string $paymentId)
     {
-        return new APIResult($this->send("deletepayment", ['Id' => $paymentId]));
+        return new APIResult($this->send("v1/deletepayment", ['Id' => $paymentId]));
     }
 
     /**
@@ -332,11 +332,11 @@ class API extends \Infira\MeritAktiva\General
      * @param $periodEnd
      * @return \Infira\MeritAktiva\APIResult
      */
-	public function getPayments($periodStart, $periodEnd): APIResult
+	public function getPayments($periodStart, $periodEnd, string $apiVersion = self::API_V1): APIResult
 	{
 		$payload = ["PeriodStart" => date("Ymd", strtotime($periodStart)), "PeriodEnd" => date("Ymd", strtotime($periodEnd))];
-
-		return new APIResult($this->send("getpayments", $payload));
+		
+		return new APIResult($this->send("$apiVersion/getpayments", $payload));
 	}
 
 	/**
@@ -348,7 +348,7 @@ class API extends \Infira\MeritAktiva\General
 	 */
 	private function getCustomersBy(array $payload): APIResult
 	{
-		return new APIResult($this->send("getcustomers", $payload));
+		return new APIResult($this->send("v1/getcustomers", $payload));
 	}
 
 	/**
@@ -357,9 +357,9 @@ class API extends \Infira\MeritAktiva\General
 	 * @see https://api.merit.ee/reference-manual/get-customer-list/
 	 * @return \Infira\MeritAktiva\APIResult
 	 */
-	public function getCustomers(): APIResult
+	public function getCustomers(string $apiVersion = self::API_V1): APIResult
 	{
-		return $this->getCustomersBy([]);
+		return $this->getCustomersBy([], $apiVersion);
 	}
 
 	/**
@@ -368,9 +368,9 @@ class API extends \Infira\MeritAktiva\General
 	 * @see https://api.merit.ee/reference-manual/get-customer-list/
 	 * @return \Infira\MeritAktiva\APIResult
 	 */
-	public function getCustomersByID($GUID)
+	public function getCustomersByID($GUID, string $apiVersion = self::API_V1)
 	{
-		return $this->getCustomersBy(["Id" => $this->validateGUID($GUID)]);
+		return $this->getCustomersBy(["Id" => $this->validateGUID($GUID)], $apiVersion);
 	}
 
 	/**
@@ -379,9 +379,9 @@ class API extends \Infira\MeritAktiva\General
 	 * @see https://api.merit.ee/reference-manual/get-customer-list/
 	 * @return \Infira\MeritAktiva\APIResult
 	 */
-	public function getCustomersByRegNo($no)
+	public function getCustomersByRegNo($registryNumber, string $apiVersion = self::API_V1)
 	{
-		return $this->getCustomersBy(["RegNo" => $no]);
+		return $this->getCustomersBy(["RegNo" => $registryNumber], $apiVersion);
 	}
 
 	/**
@@ -390,9 +390,9 @@ class API extends \Infira\MeritAktiva\General
 	 * @see https://api.merit.ee/reference-manual/get-customer-list/
 	 * @return \Infira\MeritAktiva\APIResult
 	 */
-	public function getCustomersByVatRegNo($no)
+	public function getCustomersByVatRegNo($vatNumber, string $apiVersion = self::API_V1)
 	{
-		return $this->getCustomersBy(["VatRegNo" => $no]);
+		return $this->getCustomersBy(["VatRegNo" => $vatNumber], $apiVersion);
 	}
 
 	/**
@@ -401,9 +401,9 @@ class API extends \Infira\MeritAktiva\General
 	 * @see https://api.merit.ee/reference-manual/get-customer-list/
 	 * @return \Infira\MeritAktiva\APIResult
 	 */
-	public function getCustomersByName($name)
+	public function getCustomersByName($name, string $apiVersion = self::API_V1)
 	{
-		return $this->getCustomersBy(["Name" => $name]);
+		return $this->getCustomersBy(["Name" => $name], $apiVersion);
 	}
 
     /**
@@ -415,7 +415,7 @@ class API extends \Infira\MeritAktiva\General
      */
     public function createCustomer(Customer $Customer): APIResult
     {
-        return new APIResult($this->send("sendcustomer", $Customer->getData()));
+        return new APIResult($this->send("v2/sendcustomer", $Customer->getData()));
     }
 
     /**
@@ -427,7 +427,7 @@ class API extends \Infira\MeritAktiva\General
      */
     public function updateCustomer(Customer $Customer): APIResult
     {
-        return new APIResult($this->send("updatecustomer", $Customer->getData()));
+        return new APIResult($this->send("v1/updatecustomer", $Customer->getData()));
     }
 
 	/**
@@ -436,7 +436,7 @@ class API extends \Infira\MeritAktiva\General
 	 */
 	public function getTaxes()
 	{
-		return new APIResult($this->send("gettaxes"));
+		return new APIResult($this->send("v1/gettaxes"));
 	}
 
 	/**
@@ -445,7 +445,7 @@ class API extends \Infira\MeritAktiva\General
 	 */
 	public function getBanks()
 	{
-		return new APIResult($this->send("getbanks"));
+		return new APIResult($this->send("v1/getbanks"));
 	}
 
     /**
@@ -454,7 +454,7 @@ class API extends \Infira\MeritAktiva\General
      */
     public function getAccounts()
     {
-        return new APIResult($this->send("getaccounts"));
+        return new APIResult($this->send("v1/getaccounts"));
     }
 
     /**
@@ -463,7 +463,7 @@ class API extends \Infira\MeritAktiva\General
      */
     public function getDimensions()
     {
-        return new APIResult($this->send("getdimensions",null,'v2'));
+        return new APIResult($this->send("v2/getdimensions"));
     }
 
 	/**
@@ -491,13 +491,6 @@ class API extends \Infira\MeritAktiva\General
 		return NULL;
 	}
 
-
-	/**
-	 * get merit vendors
-	 *
-	 * @return \Infira\MeritAktiva\APIResult
-	 */
-
 	/**
 	 * @param array $payload
 	 * @see https://api.merit.ee/reference-manual/get-vendor-list/
@@ -505,11 +498,11 @@ class API extends \Infira\MeritAktiva\General
 	 */
 	private function getVendorsBy(array $payload): APIResult
 	{
-		return new APIResult($this->send("getvendors", $payload));
+		return new APIResult($this->send("v1/getvendors", $payload));
 	}
 
 	/**
-	 * get vendors by ID
+	 * get merit vendors
 	 *
 	 * @return \Infira\MeritAktiva\APIResult
 	 */
@@ -556,5 +549,16 @@ class API extends \Infira\MeritAktiva\General
 	public function getVendorsByName($name)
 	{
 		return $this->getVendorsBy(["Name" => $name]);
+	}
+
+	/**
+	 * 
+	 * @param string $guid 
+	 * @return APIResult 
+	 * @see https://api.merit.ee/connecting-robots/reference-manual/sales-invoices/create-sales-invoice/send-sales-invoice-by-einvoice/
+	 */
+	public function sendEInvoice(string $guid)
+	{
+		return new APIResult($this->send("v2/sendinvoiceaseinv", ["Id" => $this->validateGUID($guid)]));
 	}
 }

@@ -9,6 +9,10 @@ namespace Infira\MeritAktiva;
  */
 class Article extends \Infira\MeritAktiva\General
 {
+	const TYPE_STOCK_ITEM = 1;
+	const TYPE_SERVICE    = 2;
+	const TYPE_ITEM       = 3;
+
 	public function __construct($array = [])
 	{
 		$this->setMandatoryField('Code');
@@ -37,7 +41,7 @@ class Article extends \Infira\MeritAktiva\General
 	 */
 	public function setType(int $int)
 	{
-		if ($int !== 1 AND $int !== 2 AND $int !== 3)
+		if ($int !== self::TYPE_STOCK_ITEM && $int !== self::TYPE_SERVICE && $int !== self::TYPE_ITEM)
 		{
 			$this->intError("Unknown Item type");
 		}
