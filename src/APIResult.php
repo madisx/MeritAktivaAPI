@@ -3,7 +3,7 @@
 namespace Infira\MeritAktiva;
 class APIResult
 {
-	private $res = "";
+	private $res;
 	
 	public function __construct($res)
 	{
@@ -12,9 +12,12 @@ class APIResult
 	
 	public function isError()
 	{
-		return (is_object($this->res) || is_array($this->res)) ? FALSE : TRUE;
+		return !((is_object($this->res) || is_array($this->res)));
 	}
-	
+
+    /**
+     * @return array|object|string
+     */
 	public function getRaw()
 	{
 		return $this->res;
