@@ -415,6 +415,17 @@ class API extends \Infira\MeritAktiva\General
 		return new APIResult($this->send("v2/sendinvoiceaseinv", ["Id" => $this->validateGUID($guid)]));
 	}
 
+    /**
+     *
+     * @param array $payload
+     * @return APIResult
+     * @see https://api.merit.ee/connecting-robots/reference-manual/reports/customer-payment-report/
+     */
+    public function getCustomerPaymentReport(array $payload)
+    {
+        return new APIResult($this->send("v2/getcustpaymrep", $payload));
+    }
+
 	/*************** Endpoint wrappers ***************/
     /**
      * Get customer list
