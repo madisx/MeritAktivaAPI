@@ -47,7 +47,8 @@ class API extends \Infira\MeritAktiva\General
 	private $lastRequestData = "";
 	private $lastRequestUrl  = "";
 	private $url             = "";
-	private $debug           = FALSE;
+	private $debug           = false;
+	private $jsonCheckError  = true; // Throws exception when json decoding fails
 
 	public function __construct($apiID, $apiKey, $country = 'ee', $vatPercent = 20)
 	{
@@ -73,6 +74,10 @@ class API extends \Infira\MeritAktiva\General
 		$this->debug = $bool;
 	}
 
+    public function setJsonCheckError(bool $jsonCheckError): void
+    {
+        $this->jsonCheckError = $jsonCheckError;
+    }
 
 	public function getLastRequestData()
 	{
@@ -134,7 +139,7 @@ class API extends \Infira\MeritAktiva\General
 
 		if ($status != 200) {
 			$error = "Error: call to URL $url <br>STATUS: $status<br>CURL_ERROR: " . curl_error($curl) . "<br> CURL_ERRNO: " . curl_errno($curl);
-			$error .= '<br><br>API SAYS:' . mertiApiDump($this->jsonDecode($curlResponse, TRUE));
+			$error .= '<br><br>API SAYS:' . mertiApiDump($this->jsonDecode($curlResponse));
 
 			return $error;
 		}
@@ -143,20 +148,25 @@ class API extends \Infira\MeritAktiva\General
         return $this->jsonDecode($curlResponse);
 	}
 
-	private function jsonDecode($json, $checkError = FALSE)
-	{
-		$json = stripslashes($json);
-		if (substr($json, 0, 1) == '"' and substr($json, -1) == '"') {
-			$data = json_decode(substr($json, 1, -1));
-		} else {
-			$data = json_decode($json);
-		}
-		if (json_last_error() and $checkError) {
-			return $json;
-		}
+    private function jsonDecode($json)
+    {
+        $decodeFlags = 0;
+        if ($this->jsonCheckError) {
+            $decodeFlags = JSON_THROW_ON_ERROR;
+        }
+        $json = stripslashes($json);
+        if (substr($json, 0, 1) == '"' and substr($json, -1) == '"') {
+            $data = json_decode(substr($json, 1, -1), null, 512, $decodeFlags);
+        } else {
+            $data = json_decode($json, null, 512, $decodeFlags);
+        }
 
-		return $data;
-	}
+        if (json_last_error() && $this->jsonCheckError) {
+            return null;
+        }
+
+        return $data;
+    }
 
 	private static function toUTF8($string)
 	{
