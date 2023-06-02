@@ -84,7 +84,7 @@ class API extends \Infira\MeritAktiva\General
 		return $this->lastRequestUrl;
 	}
 
-	private function send($endPoint, $payload = null)
+	private function send($endPoint, $payload = null, bool $stripSlashes = true)
 	{
 		$timestamp = date("YmdHis");
 		$urlParams = "";
@@ -140,23 +140,33 @@ class API extends \Infira\MeritAktiva\General
 		}
         curl_close($curl);
 
-        return $this->jsonDecode($curlResponse);
+        return $this->jsonDecode($curlResponse, false, $stripSlashes);
 	}
 
-	private function jsonDecode($json, $checkError = FALSE)
-	{
-		$json = stripslashes($json);
-		if (substr($json, 0, 1) == '"' and substr($json, -1) == '"') {
+    private function jsonDecode($json, $checkError = false, bool $stripSlashes = true)
+    {
+        if ($stripSlashes) {
+            $json = stripslashes($json);
+        }
+
+		if (str_starts_with($json, '"') && str_ends_with($json, '"')) {
 			$data = json_decode(substr($json, 1, -1));
 		} else {
 			$data = json_decode($json);
 		}
-		if (json_last_error() and $checkError) {
+
+        $error = json_last_error();
+        if ($error and $checkError) {
 			return $json;
 		}
 
-		return $data;
+        return $data;
 	}
+
+    private function looksLikeJson(string $data): bool
+    {
+        return (str_starts_with($data, '[') || str_starts_with($data, '{')) && str_ends_with($data, ']') || str_ends_with($data, '}');
+    }
 
 	private static function toUTF8($string)
 	{
@@ -423,7 +433,29 @@ class API extends \Infira\MeritAktiva\General
      */
     public function getCustomerPaymentReport(array $payload)
     {
-        return new APIResult($this->send("v2/getcustpaymrep", $payload));
+        // Strip slashes malforms the json data here
+        $data = $this->send("v2/getcustpaymrep", $payload, false);
+
+        // Try to decode subdata that is json string
+        if (is_object($data)) {
+            foreach ($data as $key => $value) {
+                if ($this->looksLikeJson($value)) {
+                    $data->{$key} = $this->jsonDecode($value);
+                } else {
+                    $data->{$key} = $value;
+                }
+            }
+        }
+
+        // Parse dates
+        foreach ($data->Data as $dataRow) {
+            preg_match(':(\d+):i', $dataRow->DocDate ?? '', $parts);
+            $dataRow->DocDate = (int)$parts[1];
+            preg_match(':(\d+):i', $dataRow->DueDate ?? '', $parts);
+            $dataRow->DueDate = (int)$parts[1];
+        }
+
+        return new APIResult($data);
     }
 
 	/*************** Endpoint wrappers ***************/
