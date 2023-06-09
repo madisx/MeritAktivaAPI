@@ -458,6 +458,38 @@ class API extends \Infira\MeritAktiva\General
         return new APIResult($data);
     }
 
+    /**
+     * @param string $Id4More
+     * @return APIResult
+     * @see https://api.merit.ee/connecting-robots/reference-manual/reports/customer-payment-report/
+     */
+    public function getMoreData(string $Id4More)
+    {
+        // Strip slashes malforms the json data here
+        $data = $this->send("v2/getmoredata", ['Id4More' => $Id4More], false);
+
+        // Try to decode subdata that is json string
+        if (is_object($data)) {
+            foreach ($data as $key => $value) {
+                if ($this->looksLikeJson($value)) {
+                    $data->{$key} = $this->jsonDecode($value);
+                } else {
+                    $data->{$key} = $value;
+                }
+            }
+        }
+
+        // Parse dates
+        foreach ($data->Data as $dataRow) {
+            preg_match(':(\d+):i', $dataRow->DocDate ?? '', $parts);
+            $dataRow->DocDate = (int)$parts[1];
+            preg_match(':(\d+):i', $dataRow->DueDate ?? '', $parts);
+            $dataRow->DueDate = (int)$parts[1];
+        }
+
+        return new APIResult($data);
+    }
+
 	/*************** Endpoint wrappers ***************/
     /**
      * Get customer list
