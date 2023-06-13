@@ -436,29 +436,17 @@ class API extends \Infira\MeritAktiva\General
         // Strip slashes malforms the json data here
         $data = $this->send("v2/getcustpaymrep", $payload, false);
 
-        // Try to decode subdata that is json string
-        if (is_object($data)) {
-            foreach ($data as $key => $value) {
-                if ($this->looksLikeJson($value)) {
-                    $data->{$key} = $this->jsonDecode($value);
-                } else {
-                    $data->{$key} = $value;
-                }
-            }
-        }
-
-        // Parse dates
-        foreach ($data->Data as $dataRow) {
-            preg_match(':(\d+):i', $dataRow->DocDate ?? '', $parts);
-            $dataRow->DocDate = (int)$parts[1];
-            preg_match(':(\d+):i', $dataRow->DueDate ?? '', $parts);
-            $dataRow->DueDate = (int)$parts[1];
-        }
-
-        return new APIResult($data);
+        return $this->processCustomerReportData($data);
     }
 
     /**
+     * WARNING: Method not fully tested.
+     *
+     * During manual testing, the 'hasMore' flag in the getCustomerPaymentReport() method was not activated even when handling over 1500+ data rows per customer.
+     * In most scenarios, it is unlikely to exceed this volume per customer.
+     *
+     * The existing documentation does not provide clear guidelines about this endpoint. However, it is anticipated that the response should mirror the structure of getCustomerPaymentReport().
+     *
      * @param string $Id4More
      * @return APIResult
      * @see https://api.merit.ee/connecting-robots/reference-manual/reports/customer-payment-report/
@@ -468,14 +456,21 @@ class API extends \Infira\MeritAktiva\General
         // Strip slashes malforms the json data here
         $data = $this->send("v2/getmoredata", ['Id4More' => $Id4More], false);
 
+        return $this->processCustomerReportData($data);
+    }
+
+    public function processCustomerReportData($data): APIResult
+    {
         // Try to decode subdata that is json string
-        if (is_object($data)) {
-            foreach ($data as $key => $value) {
-                if ($this->looksLikeJson($value)) {
-                    $data->{$key} = $this->jsonDecode($value);
-                } else {
-                    $data->{$key} = $value;
-                }
+        if (!is_object($data)) {
+            return new APIResult($data);
+        }
+
+        foreach ($data as $key => $value) {
+            if ($this->looksLikeJson($value)) {
+                $data->{$key} = $this->jsonDecode($value);
+            } else {
+                $data->{$key} = $value;
             }
         }
 
