@@ -292,6 +292,20 @@ class API extends \Infira\MeritAktiva\General
 		return new APIResult($this->send("$apiVersion/getpayments", $payload));
 	}
 
+    /**
+     * @see https://api.merit.ee/connecting-robots/reference-manual/sales-invoices/create-sales-invoice/get-sales-invoice-pdf/
+     * @param string $GUID invoice GUID
+     * @param bool $delivNote if true then, the invoice is without prices (delivery note)
+     * @return APIResult
+     */
+    public function getSalesInvoicePdf(string $GUID, bool $delivNote = false)
+    {
+        return new APIResult($this->send('v2/getsalesinvpdf', [
+            'Id' => $GUID,
+            'DelivNote' => $delivNote
+        ]));
+    }
+
 	/********** Single version endpoints*****************/
 
 	/*************** V1 API endpoints *******************/
