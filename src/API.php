@@ -422,6 +422,17 @@ class API extends \Infira\MeritAktiva\General
 	 *
 	 * @param string $guid
 	 * @return APIResult
+	 * @see https://api.merit.ee/connecting-robots/reference-manual/sales-invoices/create-sales-invoice/send-invoice-by-e-mail/
+	 */
+	public function sendEmail(string $guid)
+	{
+		return new APIResult($this->send("v2/sendinvoicebyemail", ["Id" => $this->validateGUID($guid)]));
+	}
+
+	/**
+	 *
+	 * @param string $guid
+	 * @return APIResult
 	 * @see https://api.merit.ee/connecting-robots/reference-manual/sales-invoices/create-sales-invoice/send-sales-invoice-by-einvoice/
 	 */
 	public function sendEInvoice(string $guid)
