@@ -12,6 +12,12 @@ class APIResult
 	
 	public function isError()
 	{
+		// sendinvoicebyemail method returns NULL on successful request
+	        // TODO I think its time to start checking status code as well
+	        if (is_null($this->res)) {
+	            return false;
+	        }
+
 		return !(is_object($this->res) || is_array($this->res));
 	}
 
