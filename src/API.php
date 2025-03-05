@@ -207,7 +207,7 @@ class API extends \Infira\MeritAktiva\General
 	 */
 	public function getSalesInvoiceByID(string $GUID, string $apiVersion = self::API_V1): APIResult
 	{
-		return new APIResult($this->send("$apiVersion/getinvoice", ['id' => $GUID]));
+		return new APIResult($this->send("$apiVersion/getinvoice", ['Id' => $GUID]));
 	}
 
 	/**
@@ -260,7 +260,7 @@ class API extends \Infira\MeritAktiva\General
 	 */
 	public function getPurchaseInvoiceByID(string $GUID, string $apiVersion = self::API_V1): APIResult
 	{
-		return new APIResult($this->send("$apiVersion/getpurchorder", ['id' => $GUID]));
+		return new APIResult($this->send("$apiVersion/getpurchorder", ['Id' => $GUID]));
 	}
 
 	/**
@@ -329,7 +329,7 @@ class API extends \Infira\MeritAktiva\General
 	 */
 	public function deleteSalesInvoiceByID(string $GUID): APIResult
 	{
-		return new APIResult($this->send("v1/deleteinvoice", ['id' => $GUID]));
+		return new APIResult($this->send("v1/deleteinvoice", ['Id' => $GUID]));
 	}
 
 	/**
