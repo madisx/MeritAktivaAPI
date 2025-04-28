@@ -84,7 +84,7 @@ class API extends \Infira\MeritAktiva\General
 		return $this->lastRequestUrl;
 	}
 
-	private function send($endPoint, $payload = null)
+	private function send($endPoint, $payload = null, bool $stripSlashes = true)
 	{
 		$timestamp = date("YmdHis");
 		$urlParams = "";
@@ -140,23 +140,33 @@ class API extends \Infira\MeritAktiva\General
 		}
         curl_close($curl);
 
-        return $this->jsonDecode($curlResponse);
+        return $this->jsonDecode($curlResponse, false, $stripSlashes);
 	}
 
-	private function jsonDecode($json, $checkError = FALSE)
-	{
-		$json = stripslashes($json);
-		if (substr($json, 0, 1) == '"' and substr($json, -1) == '"') {
+    private function jsonDecode($json, $checkError = false, bool $stripSlashes = true)
+    {
+        if ($stripSlashes) {
+            $json = stripslashes($json);
+        }
+
+		if (str_starts_with($json, '"') && str_ends_with($json, '"')) {
 			$data = json_decode(substr($json, 1, -1));
 		} else {
 			$data = json_decode($json);
 		}
-		if (json_last_error() and $checkError) {
+
+        $error = json_last_error();
+        if ($error and $checkError) {
 			return $json;
 		}
 
-		return $data;
+        return $data;
 	}
+
+    private function looksLikeJson(string $data): bool
+    {
+        return (str_starts_with($data, '[') || str_starts_with($data, '{')) && str_ends_with($data, ']') || str_ends_with($data, '}');
+    }
 
 	private static function toUTF8($string)
 	{
@@ -197,7 +207,7 @@ class API extends \Infira\MeritAktiva\General
 	 */
 	public function getSalesInvoiceByID(string $GUID, string $apiVersion = self::API_V1): APIResult
 	{
-		return new APIResult($this->send("$apiVersion/getinvoice", ['id' => $GUID]));
+		return new APIResult($this->send("$apiVersion/getinvoice", ['Id' => $GUID]));
 	}
 
 	/**
@@ -250,7 +260,7 @@ class API extends \Infira\MeritAktiva\General
 	 */
 	public function getPurchaseInvoiceByID(string $GUID, string $apiVersion = self::API_V1): APIResult
 	{
-		return new APIResult($this->send("$apiVersion/getpurchorder", ['id' => $GUID]));
+		return new APIResult($this->send("$apiVersion/getpurchorder", ['Id' => $GUID]));
 	}
 
 	/**
@@ -319,7 +329,7 @@ class API extends \Infira\MeritAktiva\General
 	 */
 	public function deleteSalesInvoiceByID(string $GUID): APIResult
 	{
-		return new APIResult($this->send("v1/deleteinvoice", ['id' => $GUID]));
+		return new APIResult($this->send("v1/deleteinvoice", ['Id' => $GUID]));
 	}
 
 	/**
@@ -448,7 +458,56 @@ class API extends \Infira\MeritAktiva\General
      */
     public function getCustomerPaymentReport(array $payload)
     {
-        return new APIResult($this->send("v2/getcustpaymrep", $payload));
+        // Strip slashes malforms the json data here
+        $data = $this->send("v2/getcustpaymrep", $payload, false);
+
+        return $this->processCustomerReportData($data);
+    }
+
+    /**
+     * WARNING: Method not fully tested.
+     *
+     * During manual testing, the 'hasMore' flag in the getCustomerPaymentReport() method was not activated even when handling over 1500+ data rows per customer.
+     * In most scenarios, it is unlikely to exceed this volume per customer.
+     *
+     * The existing documentation does not provide clear guidelines about this endpoint. However, it is anticipated that the response should mirror the structure of getCustomerPaymentReport().
+     *
+     * @param string $Id4More
+     * @return APIResult
+     * @see https://api.merit.ee/connecting-robots/reference-manual/reports/customer-payment-report/
+     */
+    public function getMoreData(string $Id4More)
+    {
+        // Strip slashes malforms the json data here
+        $data = $this->send("v2/getmoredata", ['Id4More' => $Id4More], false);
+
+        return $this->processCustomerReportData($data);
+    }
+
+    public function processCustomerReportData($data): APIResult
+    {
+        // Try to decode subdata that is json string
+        if (!is_object($data)) {
+            return new APIResult($data);
+        }
+
+        foreach ($data as $key => $value) {
+            if ($this->looksLikeJson($value)) {
+                $data->{$key} = $this->jsonDecode($value);
+            } else {
+                $data->{$key} = $value;
+            }
+        }
+
+        // Parse dates
+        foreach ($data->Data as $dataRow) {
+            preg_match(':(\d+):i', $dataRow->DocDate ?? '', $parts);
+            $dataRow->DocDate = (int)$parts[1];
+            preg_match(':(\d+):i', $dataRow->DueDate ?? '', $parts);
+            $dataRow->DueDate = (int)$parts[1];
+        }
+
+        return new APIResult($data);
     }
 
 	/*************** Endpoint wrappers ***************/
